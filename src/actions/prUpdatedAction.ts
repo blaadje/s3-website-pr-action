@@ -13,6 +13,7 @@ export const requiredEnvVars = [
 export default async (bucketName: string, uploadDirectory: string) => {
   console.log('PR Updated');
   console.log('TEEEEST')
+  console.log('TEEEEST')
 
   validateEnvVars(requiredEnvVars);
 
