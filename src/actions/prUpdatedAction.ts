@@ -12,6 +12,7 @@ export const requiredEnvVars = [
 
 export default async (bucketName: string, uploadDirectory: string) => {
   console.log('PR Updated');
+  console.log('TEEEEST')
 
   validateEnvVars(requiredEnvVars);
 
@@ -30,14 +31,18 @@ export default async (bucketName: string, uploadDirectory: string) => {
       }
     }).promise();
 
-    const websiteUrl = `http://${bucketName}.s3-website-us-east-1.amazonaws.com`;
-    console.log(`Website URL: ${websiteUrl}`);
-
-    await commentOnPr(websiteUrl);
   } else {
     console.log('S3 Bucket already exists. Skipping creation...');
   }
-
+  
   console.log('Uploading files...');
-  await s3UploadDirectory(bucketName, uploadDirectory);
+  const fileNames: any = await s3UploadDirectory(bucketName, uploadDirectory) || [];
+  console.log(fileNames)
+  
+  const fileName = fileNames.find((name: string) => (name.includes('dmg') || name.includes('exe') || name.includes('appimage')) && !name.includes('blockmap'))
+
+  const websiteUrl = `http://${bucketName}.s3-website-us-east-1.amazonaws.com/${fileName}`;
+  console.log(`Website URL: ${websiteUrl}`);
+
+  await commentOnPr(websiteUrl);
 };
