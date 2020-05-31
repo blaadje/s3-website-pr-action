@@ -3864,15 +3864,25 @@ exports.default = (bucketName, uploadDirectory) => __awaiter(void 0, void 0, voi
                 ErrorDocument: { Key: 'index.html' }
             }
         }).promise();
-        const websiteUrl = `http://${bucketName}.s3-website-us-east-1.amazonaws.com`;
-        console.log(`Website URL: ${websiteUrl}`);
-        yield commentOnPr_1.default(websiteUrl);
     }
     else {
         console.log('S3 Bucket already exists. Skipping creation...');
     }
     console.log('Uploading files...');
-    yield s3UploadDirectory_1.default(bucketName, uploadDirectory);
+    const fileNames = (yield s3UploadDirectory_1.default(bucketName, uploadDirectory)) || [];
+    const fileName = fileNames.find((name) => (name.includes('dmg') || name.includes('exe') || name.includes('AppImage')) && !name.includes('blockmap'));
+    const OS = () => {
+        if (fileName.includes('dmg'))
+            return 'Mac OS';
+        if (fileName.includes('exe'))
+            return 'Windows';
+        if (fileName.includes('AppImage'))
+            return 'LInux';
+    };
+    const formattedFileName = fileName.split(' ').join('+');
+    const websiteUrl = `https://${bucketName}.s3.amazonaws.com/${formattedFileName}`;
+    const message = `Deployment done for ${OS()} ✅. You can download the app [here](${websiteUrl})`;
+    yield commentOnPr_1.default(message);
 });
 
 
@@ -18278,8 +18288,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const github = __importStar(__webpack_require__(469));
 const { GITHUB_TOKEN } = process.env;
 exports.default = (message) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
-    const { number } = (_a = github.context.payload) === null || _a === void 0 ? void 0 : _a.pull_request;
+    console.log(github.context);
+    const { number } = github.context.payload.issue;
     const { owner, repo } = github.context.repo;
     const oktokit = new github.GitHub(GITHUB_TOKEN);
     yield oktokit.issues.createComment({
@@ -25429,7 +25439,7 @@ const mime_types_1 = __importDefault(__webpack_require__(779));
 exports.default = (bucketName, directory) => __awaiter(void 0, void 0, void 0, function* () {
     const normalizedPath = path_1.default.normalize(directory);
     const files = yield recursive_readdir_1.default(normalizedPath);
-    yield Promise.all(files.map((filePath) => __awaiter(void 0, void 0, void 0, function* () {
+    return yield Promise.all(files.map((filePath) => __awaiter(void 0, void 0, void 0, function* () {
         const s3Key = filePathToS3Key_1.default(filePath.replace(normalizedPath, ''));
         console.log(`Uploading ${s3Key} to ${bucketName}`);
         try {
@@ -25449,6 +25459,7 @@ exports.default = (bucketName, directory) => __awaiter(void 0, void 0, void 0, f
             console.log(message);
             throw message;
         }
+        return s3Key;
     })));
 });
 

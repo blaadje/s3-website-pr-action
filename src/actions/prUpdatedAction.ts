@@ -12,7 +12,6 @@ export const requiredEnvVars = [
 
 export default async (bucketName: string, uploadDirectory: string) => {
   console.log('PR Updated');
-  console.log('TEEEEST')
 
   validateEnvVars(requiredEnvVars);
 
@@ -37,12 +36,19 @@ export default async (bucketName: string, uploadDirectory: string) => {
   
   console.log('Uploading files...');
   const fileNames: any = await s3UploadDirectory(bucketName, uploadDirectory) || [];
-  console.log(fileNames)
   
-  const fileName = fileNames.find((name: string) => (name.includes('dmg') || name.includes('exe') || name.includes('appimage')) && !name.includes('blockmap'))
+  const fileName = fileNames.find((name: string) => (
+    name.includes('dmg') || name.includes('exe') || name.includes('AppImage')) && !name.includes('blockmap')
+  )
+  const OS = () => {
+    if (fileName.includes('dmg')) return 'Mac OS'
+    if (fileName.includes('exe')) return 'Windows'
+    if (fileName.includes('AppImage')) return 'LInux'
+  }
 
-  const websiteUrl = `http://${bucketName}.s3-website-us-east-1.amazonaws.com/${fileName}`;
-  console.log(`Website URL: ${websiteUrl}`);
+  const formattedFileName = fileName.split(' ').join('+')
+  const websiteUrl = `https://${bucketName}.s3.amazonaws.com/${formattedFileName}`;
+  const message = `Deployment done for ${OS()} ✅. You can download the app [here](${websiteUrl})`
 
-  await commentOnPr(websiteUrl);
+  await commentOnPr(message);
 };
