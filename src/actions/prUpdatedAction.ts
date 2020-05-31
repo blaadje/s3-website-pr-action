@@ -1,8 +1,10 @@
+import * as github from "@actions/github";
 import S3 from '../s3Client';
 import s3UploadDirectory from '../utils/s3UploadDirectory';
-import commentOnPr from '../utils/commentOnPr';
 import validateEnvVars from '../utils/validateEnvVars';
 import checkBucketExists from '../utils/checkBucketExists';
+import githubClient from '../githubClient';
+import deactivateDeployments from "../utils/deactivateDeployments";
 
 export const requiredEnvVars = [
   'AWS_ACCESS_KEY_ID',
@@ -11,6 +13,10 @@ export const requiredEnvVars = [
 ];
 
 export default async (bucketName: string, uploadDirectory: string) => {
+  const websiteUrl = `http://${bucketName}.s3-website-us-east-1.amazonaws.com`;
+  const { repo } = github.context;
+  const branchName = github.context.payload.pull_request!.head.ref;
+
   console.log('PR Updated');
   console.log('TEEEEST')
   console.log('TEEEEST')
