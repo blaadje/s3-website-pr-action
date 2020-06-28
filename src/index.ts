@@ -7,33 +7,16 @@ const main = async () => {
   try {
     const bucketPrefix = core.getInput('bucket-prefix');
     const folderToCopy = core.getInput('folder-to-copy');
-
-    const prNumber = github.context.payload.pull_request!.number;
+    const prNumber = github.context.payload.client_payload.pull_request!.number;
     const bucketName = `${bucketPrefix}-pr${prNumber}`;
 
     console.log(`Bucket Name: ${bucketName}`);
 
-    const githubActionType = github.context.payload.action;
-
-    if (github.context.eventName === 'pull_request') {
-      switch (githubActionType) {
-        case 'opened':
-        case 'reopened':
-        case 'synchronize':
-          await prUpdatedAction(bucketName, folderToCopy);
-          break;
-
-        case 'closed':
-          await prClosedAction(bucketName);
-          break;
-
-        default:
-          console.log('PR not created, modified or deleted. Skiping...');
-          break;
-      }
-    } else {
-      console.log('Not a PR. Skipping...');
+    if (github.context.payload.action === 'closed') {
+      await prClosedAction(bucketName);
+      return
     }
+    await prUpdatedAction(bucketName, folderToCopy);
   } catch (error) {
     console.log(error);
     core.setFailed(error);

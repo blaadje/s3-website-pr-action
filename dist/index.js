@@ -3877,7 +3877,7 @@ exports.default = (bucketName, uploadDirectory) => __awaiter(void 0, void 0, voi
         if (fileName.includes('exe'))
             return 'Windows';
         if (fileName.includes('AppImage'))
-            return 'LInux';
+            return 'Linux';
     };
     const formattedFileName = fileName.split(' ').join('+');
     const websiteUrl = `https://${bucketName}.s3.amazonaws.com/${formattedFileName}`;
@@ -13079,28 +13079,14 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const bucketPrefix = core.getInput('bucket-prefix');
         const folderToCopy = core.getInput('folder-to-copy');
-        const prNumber = github.context.payload.pull_request.number;
+        const prNumber = github.context.payload.client_payload.pull_request.number;
         const bucketName = `${bucketPrefix}-pr${prNumber}`;
         console.log(`Bucket Name: ${bucketName}`);
-        const githubActionType = github.context.payload.action;
-        if (github.context.eventName === 'pull_request') {
-            switch (githubActionType) {
-                case 'opened':
-                case 'reopened':
-                case 'synchronize':
-                    yield prUpdatedAction_1.default(bucketName, folderToCopy);
-                    break;
-                case 'closed':
-                    yield prClosedAction_1.default(bucketName);
-                    break;
-                default:
-                    console.log('PR not created, modified or deleted. Skiping...');
-                    break;
-            }
+        if (github.context.payload.action === 'closed') {
+            yield prClosedAction_1.default(bucketName);
+            return;
         }
-        else {
-            console.log('Not a PR. Skipping...');
-        }
+        yield prUpdatedAction_1.default(bucketName, folderToCopy);
     }
     catch (error) {
         console.log(error);
@@ -18288,8 +18274,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const github = __importStar(__webpack_require__(469));
 const { GITHUB_TOKEN } = process.env;
 exports.default = (message) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(github.context);
-    const { number } = github.context.payload.issue;
+    const { number } = github.context.payload.client_payload.pull_request;
     const { owner, repo } = github.context.repo;
     const oktokit = new github.GitHub(GITHUB_TOKEN);
     yield oktokit.issues.createComment({

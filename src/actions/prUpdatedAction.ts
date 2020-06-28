@@ -43,7 +43,7 @@ export default async (bucketName: string, uploadDirectory: string) => {
   const OS = () => {
     if (fileName.includes('dmg')) return 'Mac OS'
     if (fileName.includes('exe')) return 'Windows'
-    if (fileName.includes('AppImage')) return 'LInux'
+    if (fileName.includes('AppImage')) return 'Linux'
   }
 
   const formattedFileName = fileName.split(' ').join('+')
